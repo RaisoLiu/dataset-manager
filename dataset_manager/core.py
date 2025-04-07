@@ -89,12 +89,22 @@ def verify_dataset(folder_path: str, checksum_path: Optional[str] = None) -> Tup
     with open(checksum_path) as f:
         for line in f:
             if line.strip():
-                path, checksum = line.strip().split()
-                expected_checksums[path] = checksum
+                # 將每行分成兩部分：最後的 hash 值和前面的檔案名
+                line = line.strip()
+                hash_value = line.split()[-1]
+                file_path = line[:-len(hash_value)].strip()
+                expected_checksums[file_path] = hash_value
     
     # Verify files
     error_messages = {}
     is_valid = True
+    
+    # Check for missing files
+    print("\n=== 驗證資訊 ===")
+    print(f"資料夾路徑: {folder_path}")
+    print(f"校驗文件: {checksum_path}")
+    print(f"待驗證檔案數量: {len(expected_checksums)}")
+    print("================\n")
     
     # Check for missing files
     for expected_path in tqdm(expected_checksums, desc="Checking for missing files"):
