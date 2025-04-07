@@ -22,13 +22,18 @@ def verify_checksum_command():
     
     args = parser.parse_args()
     try:
-        is_valid, error_messages = verify_dataset(args.folder_path, args.checksum)
-        if is_valid:
-            print("Verification successful: All files match their checksums")
+        result = verify_dataset(args.folder_path, args.checksum)
+        if isinstance(result, tuple) and len(result) == 2:
+            is_valid, error_messages = result
+            if is_valid:
+                print("Verification successful: All files match their checksums")
+            else:
+                print("Verification failed: Found mismatched files")
+                for file_path, error in error_messages.items():
+                    print(f"- {file_path}: {error}")
+                exit(1)
         else:
-            print("Verification failed: Found mismatched files")
-            for file_path, error in error_messages.items():
-                print(f"- {file_path}: {error}")
+            print("Error: Unexpected return value from verify_dataset")
             exit(1)
     except Exception as e:
         print(f"Error: {str(e)}")
