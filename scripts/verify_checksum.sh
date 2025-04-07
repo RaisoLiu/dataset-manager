@@ -23,34 +23,34 @@ if [ ! -f "$CHECKSUM_PATH" ]; then
     exit 1
 fi
 
-# 檢查是否安裝了 sha256sum
-if ! command -v sha256sum &> /dev/null; then
-    echo "錯誤: 需要安裝 sha256sum 工具"
-    echo "在 macOS 上，您可以通過 'brew install coreutils' 安裝"
+# 檢查 Python 環境
+if ! command -v python3 &> /dev/null; then
+    echo "錯誤: 需要安裝 Python 3"
     exit 1
 fi
 
-echo "開始驗證校驗文件..."
-echo "資料夾: $FOLDER_PATH"
-echo "校驗文件: $CHECKSUM_PATH"
+# 獲取腳本所在目錄
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
 
-# 臨時文件用於存儲當前校驗值
-TEMP_CHECKSUM=$(mktemp)
+# 執行 Python 腳本
+python3 -c "
+import sys
+sys.path.append('$PROJECT_ROOT')
+from dataset_manager.core import verify_dataset
 
-# 生成當前校驗值
-find "$FOLDER_PATH" -type f -not -path "*/\.*" -not -name "checksum.txt" -exec sha256sum {} \; | \
-    sed "s|$FOLDER_PATH/||" | \
-    sort > "$TEMP_CHECKSUM"
-
-# 比較校驗值
-if diff -q "$CHECKSUM_PATH" "$TEMP_CHECKSUM" > /dev/null; then
-    echo "驗證成功：所有檔案都符合校驗值"
-    rm "$TEMP_CHECKSUM"
-    exit 0
-else
-    echo "驗證失敗：發現不一致的檔案"
-    echo "詳細差異："
-    diff "$CHECKSUM_PATH" "$TEMP_CHECKSUM"
-    rm "$TEMP_CHECKSUM"
-    exit 1
-fi 
+try:
+    is_valid, error_messages = verify_dataset('$FOLDER_PATH', '$CHECKSUM_PATH')
+    if is_valid:
+        print('\n驗證成功：所有檔案都符合校驗值')
+        sys.exit(0)
+    else:
+        print('\n驗證失敗：發現不一致的檔案')
+        print('詳細錯誤：')
+        for file_path, error in error_messages.items():
+            print(f'- {file_path}: {error}')
+        sys.exit(1)
+except Exception as e:
+    print(f'錯誤: {str(e)}')
+    sys.exit(1)
+" 

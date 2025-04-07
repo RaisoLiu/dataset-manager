@@ -1,6 +1,26 @@
 [build-system]
-requires = ["setuptools>=42", "wheel"]
-build-backend = "setuptools.build_meta"
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "dataset-manager"
+version = "0.1.0"
+description = "A tool for managing dataset checksums"
+readme = "README.md"
+requires-python = ">=3.7"
+authors = [
+    { name = "Raiso", email = "" }
+]
+dependencies = [
+    "tqdm>=4.65.0"
+]
+
+[project.scripts]
+dm-generate-checksum = "dataset_manager.cli:generate_checksum_command"
+dm-verify-checksum = "dataset_manager.cli:verify_checksum_command"
+
+[project.urls]
+Repository = "https://github.com/username/dataset-manager"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

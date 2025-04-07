@@ -39,6 +39,13 @@ def generate_checksum(folder_path: str, output_path: Optional[str] = None) -> st
         if file_path.is_file() and file_path.name != "checksum.txt":
             files_to_process.append(file_path)
     
+    # 顯示摘要資訊
+    print(f"\n=== 摘要資訊 ===")
+    print(f"資料夾路徑: {folder_path}")
+    print(f"輸出檔案: {output_path}")
+    print(f"待處理檔案數量: {len(files_to_process)}")
+    print("================\n")
+    
     checksums = []
     # 使用 tqdm 顯示進度
     for file_path in tqdm(files_to_process, desc="Generating checksums"):

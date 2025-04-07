@@ -17,27 +17,26 @@ if [ ! -d "$FOLDER_PATH" ]; then
     exit 1
 fi
 
-# 檢查是否安裝了 sha256sum
-if ! command -v sha256sum &> /dev/null; then
-    echo "錯誤: 需要安裝 sha256sum 工具"
-    echo "在 macOS 上，您可以通過 'brew install coreutils' 安裝"
+# 檢查 Python 環境
+if ! command -v python3 &> /dev/null; then
+    echo "錯誤: 需要安裝 Python 3"
     exit 1
 fi
 
-echo "開始生成校驗文件..."
-echo "資料夾: $FOLDER_PATH"
-echo "輸出文件: $OUTPUT_PATH"
+# 獲取腳本所在目錄
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
 
-# 生成校驗文件
-find "$FOLDER_PATH" -type f -not -path "*/\.*" -not -name "checksum.txt" -exec sha256sum {} \; | \
-    sed "s|$FOLDER_PATH/||" | \
-    sort > "$OUTPUT_PATH"
+# 執行 Python 腳本
+python3 -c "
+import sys
+sys.path.append('$PROJECT_ROOT')
+from dataset_manager.core import generate_checksum
 
-# 檢查是否成功
-if [ $? -eq 0 ]; then
-    echo "校驗文件已成功生成"
-    echo "共處理 $(wc -l < "$OUTPUT_PATH") 個檔案"
-else
-    echo "生成校驗文件時發生錯誤"
-    exit 1
-fi 
+try:
+    result = generate_checksum('$FOLDER_PATH', '$OUTPUT_PATH')
+    print(f'\n校驗文件已成功生成: {result}')
+except Exception as e:
+    print(f'錯誤: {str(e)}')
+    sys.exit(1)
+" 
